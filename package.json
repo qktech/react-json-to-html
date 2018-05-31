@@ -1,6 +1,6 @@
 {
   "name": "react-json-to-html",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A simple React component to render HTML table from JSON object",
   "main": "dist/App.js",
   "scripts": {
@@ -36,7 +36,7 @@
     "react-test-renderer": "^15.4.2",
     "webpack": "^2.2.1",
     "webpack-dev-server": "^2.2.0",
-    "@types/react": "*"  
+    "@types/react": "*"
   },
   "peerDependencies": {
     "react": "^15.4.2"

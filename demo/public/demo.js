@@ -768,12 +768,10 @@ module.exports = ExecutionEnvironment;
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright 2013-2015, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 
@@ -8557,6 +8555,27 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      */
     componentWillUnmount: 'DEFINE_MANY',
 
+    /**
+     * Replacement for (deprecated) `componentWillMount`.
+     *
+     * @optional
+     */
+    UNSAFE_componentWillMount: 'DEFINE_MANY',
+
+    /**
+     * Replacement for (deprecated) `componentWillReceiveProps`.
+     *
+     * @optional
+     */
+    UNSAFE_componentWillReceiveProps: 'DEFINE_MANY',
+
+    /**
+     * Replacement for (deprecated) `componentWillUpdate`.
+     *
+     * @optional
+     */
+    UNSAFE_componentWillUpdate: 'DEFINE_MANY',
+
     // ==== Advanced methods ====
 
     /**
@@ -8570,6 +8589,23 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      * @overridable
      */
     updateComponent: 'OVERRIDE_BASE'
+  };
+
+  /**
+   * Similar to ReactClassInterface but for static methods.
+   */
+  var ReactClassStaticInterface = {
+    /**
+     * This method is invoked after a component is instantiated and when it
+     * receives new props. Return an object to update state in response to
+     * prop changes. Return null to indicate no change to state.
+     *
+     * If an object is returned, its keys will be merged into the existing state.
+     *
+     * @return {object || null}
+     * @optional
+     */
+    getDerivedStateFromProps: 'DEFINE_MANY_MERGED'
   };
 
   /**
@@ -8806,6 +8842,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     if (!statics) {
       return;
     }
+
     for (var name in statics) {
       var property = statics[name];
       if (!statics.hasOwnProperty(name)) {
@@ -8822,14 +8859,25 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         name
       );
 
-      var isInherited = name in Constructor;
-      _invariant(
-        !isInherited,
-        'ReactClass: You are attempting to define ' +
-          '`%s` on your component more than once. This conflict may be ' +
-          'due to a mixin.',
-        name
-      );
+      var isAlreadyDefined = name in Constructor;
+      if (isAlreadyDefined) {
+        var specPolicy = ReactClassStaticInterface.hasOwnProperty(name)
+          ? ReactClassStaticInterface[name]
+          : null;
+
+        _invariant(
+          specPolicy === 'DEFINE_MANY_MERGED',
+          'ReactClass: You are attempting to define ' +
+            '`%s` on your component more than once. This conflict may be ' +
+            'due to a mixin.',
+          name
+        );
+
+        Constructor[name] = createMergedResultFunction(Constructor[name], property);
+
+        return;
+      }
+
       Constructor[name] = property;
     }
   }
@@ -9137,6 +9185,12 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         !Constructor.prototype.componentWillRecieveProps,
         '%s has a method called ' +
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        spec.displayName || 'A component'
+      );
+      warning(
+        !Constructor.prototype.UNSAFE_componentWillRecieveProps,
+        '%s has a method called UNSAFE_componentWillRecieveProps(). ' +
+          'Did you mean UNSAFE_componentWillReceiveProps()?',
         spec.displayName || 'A component'
       );
     }
@@ -13981,12 +14035,18 @@ var Complex = function (_React$Component) {
           "Network": {
             "IP": "10.100.99.101",
             "MAC": "00:0a:XX:9F:XX:16",
-            "Interfaces": ["nic-1", "nic-2", "nic-2"]
+            "Interfaces": ["nic-1", "nic-2", "nic-3"]
           },
           "Hardware": {
+            "Drive Bays": ["bay-1", "bay-2", "bay-3", "bay-4"],
             "Cores": "24",
-            "Memory": "256 GB",
-            "Storage": "50 TB"
+            "Memory": "256 GB"
+          },
+          "Storage": {
+            "Type": "Object",
+            "Vendor": "Some Vendor",
+            "IOPS": "1000",
+            "Size": "26 TB"
           }
         }
       };
@@ -14045,7 +14105,7 @@ var Complex = function (_React$Component) {
               _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Interfaces": [',
               _react2.default.createElement('br', null),
-              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"nic-1", "nic-2", "nic-2"',
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"nic-1", "nic-2", "nic-3"',
               _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0] ',
               _react2.default.createElement('br', null),
@@ -14053,11 +14113,27 @@ var Complex = function (_React$Component) {
               _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0"Hardware": {',
               _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Drive Bays": [',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"bay-1", "bay-2", "bay-3", "bay-4"',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0] ',
+              _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Cores": "24",',
               _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Memory": "256 GB",',
               _react2.default.createElement('br', null),
-              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Storage": "50 TB"',
+              '\xA0\xA0\xA0\xA0\xA0\xA0}',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0"Storage": {',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Type": "Object",',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Vendor": "Some Vendor",',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"IOPS": "1000",',
+              _react2.default.createElement('br', null),
+              '\xA0\xA0\xA0\xA0\xA0\xA0\xA0\xA0"Size": "26 TB",',
               _react2.default.createElement('br', null),
               '\xA0\xA0\xA0\xA0\xA0\xA0}',
               _react2.default.createElement('br', null),
@@ -14380,10 +14456,13 @@ var JsonToHtml = function () {
   var suffix = '&nbsp;&nbsp;';
   var colspan = 2;
   var jsonObjOrig;
+  var subLevel = 0;
+  var componentLevel = 0;
 
   var getTable = function getTable(jsonObj) {
     html = '<table cellspacing="1" style="border-spacing:2px">';
     jsonObjOrig = jsonObj;
+    level = 0;
     walkTheDog(jsonObj);
     html += '</table>';
     return html;
@@ -14483,9 +14562,13 @@ var JsonToHtml = function () {
   };
 
   var walkTheDog = function walkTheDog(jsonObj) {
+    var hasArray = false;
+
     if (typeof jsonObj === 'string') {
       jsonObj = JSON.parse(jsonObj);
     }
+
+    subLevel = level;
 
     for (var k in jsonObj) {
       // Reset the indent if next element is root
@@ -14496,8 +14579,14 @@ var JsonToHtml = function () {
         rootClass = getStyleAttributes('subElement');
       }
 
+      componentLevel = subLevel;
+
       if (jsonObj.hasOwnProperty(k)) {
         var v = jsonObj[k];
+
+        if (hasArray) {
+          level = componentLevel;
+        }
 
         if ((typeof v === 'undefined' ? 'undefined' : _typeof(v)) === 'object') {
           colspan += level;
@@ -14512,10 +14601,12 @@ var JsonToHtml = function () {
 
         if (v instanceof Array) {
           html += processArray(v);
+          hasArray = true;
         }
 
         if ((typeof v === 'undefined' ? 'undefined' : _typeof(v)) === 'object' && !(v instanceof Array)) {
           walkTheDog(v);
+          level = subLevel - 1; // Outdent back 
         }
       }
     }
@@ -15892,57 +15983,78 @@ exports.default = createMemoryHistory;
 /* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
 /**
  * Copyright 2015, Yahoo! Inc.
  * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
  */
-
-
-var REACT_STATICS = {
-    childContextTypes: true,
-    contextTypes: true,
-    defaultProps: true,
-    displayName: true,
-    getDefaultProps: true,
-    mixins: true,
-    propTypes: true,
-    type: true
-};
-
-var KNOWN_STATICS = {
-    name: true,
-    length: true,
-    prototype: true,
-    caller: true,
-    arguments: true,
-    arity: true
-};
-
-var isGetOwnPropertySymbolsAvailable = typeof Object.getOwnPropertySymbols === 'function';
-
-module.exports = function hoistNonReactStatics(targetComponent, sourceComponent, customStatics) {
-    if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
-        var keys = Object.getOwnPropertyNames(sourceComponent);
-
-        /* istanbul ignore else */
-        if (isGetOwnPropertySymbolsAvailable) {
-            keys = keys.concat(Object.getOwnPropertySymbols(sourceComponent));
-        }
-
-        for (var i = 0; i < keys.length; ++i) {
-            if (!REACT_STATICS[keys[i]] && !KNOWN_STATICS[keys[i]] && (!customStatics || !customStatics[keys[i]])) {
-                try {
-                    targetComponent[keys[i]] = sourceComponent[keys[i]];
-                } catch (error) {
-
+(function (global, factory) {
+     true ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global.hoistNonReactStatics = factory());
+}(this, (function () {
+    'use strict';
+    
+    var REACT_STATICS = {
+        childContextTypes: true,
+        contextTypes: true,
+        defaultProps: true,
+        displayName: true,
+        getDefaultProps: true,
+        getDerivedStateFromProps: true,
+        mixins: true,
+        propTypes: true,
+        type: true
+    };
+    
+    var KNOWN_STATICS = {
+        name: true,
+        length: true,
+        prototype: true,
+        caller: true,
+        callee: true,
+        arguments: true,
+        arity: true
+    };
+    
+    var defineProperty = Object.defineProperty;
+    var getOwnPropertyNames = Object.getOwnPropertyNames;
+    var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+    var getPrototypeOf = Object.getPrototypeOf;
+    var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
+    
+    return function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
+        if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
+            
+            if (objectPrototype) {
+                var inheritedComponent = getPrototypeOf(sourceComponent);
+                if (inheritedComponent && inheritedComponent !== objectPrototype) {
+                    hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
                 }
             }
+            
+            var keys = getOwnPropertyNames(sourceComponent);
+            
+            if (getOwnPropertySymbols) {
+                keys = keys.concat(getOwnPropertySymbols(sourceComponent));
+            }
+            
+            for (var i = 0; i < keys.length; ++i) {
+                var key = keys[i];
+                if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
+                    var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
+                    try { // Avoid failures from read-only properties
+                        defineProperty(targetComponent, key, descriptor);
+                    } catch (e) {}
+                }
+            }
+            
+            return targetComponent;
         }
-    }
-
-    return targetComponent;
-};
+        
+        return targetComponent;
+    };
+})));
 
 
 /***/ }),
