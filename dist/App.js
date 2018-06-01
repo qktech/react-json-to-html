@@ -1,14 +1,15 @@
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.JsonTable = undefined;
+Object.defineProperty(exports, "JsonTable", {
+  enumerable: true,
+  get: function get() {
+    return _JsonTable.default;
+  }
+});
 
-var _JsonTable = require('./JsonTable');
-
-var _JsonTable2 = _interopRequireDefault(_JsonTable);
+var _JsonTable = _interopRequireDefault(require("./JsonTable"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.JsonTable = _JsonTable2.default;
