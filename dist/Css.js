@@ -1,3 +1,9 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 var Css = {
   jsonTd: {
     padding: '5px',
@@ -19,7 +25,7 @@ var Css = {
     borderRadius: '5px'
   },
   indent: {
-    width: '30px'	
+    width: '30px'
   },
   dataCell: {
     borderSpacing: '2px',
@@ -33,5 +39,5 @@ var Css = {
     width: '100%'
   }
 };
-
-export default Css;
+var _default = Css;
+exports.default = _default;
