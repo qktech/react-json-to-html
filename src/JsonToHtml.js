@@ -1,53 +1,52 @@
 import Css from './Css';
 
 var JsonToHtml = (function() {
-  var html = '';
-  var level = 0;
-  var rootClass = "";
-  var suffix = '&nbsp;&nbsp;';
-  var colspan = 2;
-  var jsonObjOrig; 
-  var subLevel = 0;
-  var componentLevel = 0;
+  let html = '';
+  let level = 0;
+  let rootClass = '';
+  const suffix = '&nbsp;&nbsp;';
+  let jsonObjOrig; 
+  let subLevel = 0;
+  let componentLevel = 0;
 
-  var getTable = function(jsonObj) {
+  const getTable = function(jsonObj, replacer) {
     html = '<table cellspacing="1" style="border-spacing:2px">';
     jsonObjOrig = jsonObj;
     level = 0;
-    walkTheDog(jsonObj);
+    walkTheDog(jsonObj, replacer);
     html += '</table>';
     return html;
   };
 
-  var getIndent = function(level) {
-    var indent = '&nbsp;&nbsp;'; 
+  const getIndent = function(level) {
+    let indent = '&nbsp;&nbsp;'; 
 
     for (var i=0; i<level; i++) {
       indent += '&nbsp;&nbsp;&nbsp;';
     }
 
     return indent;
-  }
+  };
 
   // TODO: This is such a hack, but css border-spacing is simply not working
-  var getSpacer = function() {
+  const getSpacer = function() {
     return '<tr style="height:2px"></tr>';
-  }
+  };
 
   // Get the Css obj from Css.js, and return a semicolon separated list of styles
-  var getStyleAttributes = function(className) {
-    var cssObj = Css[className];
-    var keys = Object.keys(cssObj);
-    var attributes = "";
+  const getStyleAttributes = function(className) {
+    const cssObj = Css[className];
+    const keys = Object.keys(cssObj);
+    let attributes = '';
 
-    for(var i=0; i<keys.length; i++) {
-      var key = keys[i];
-      var cssAttr = key.replace(/([A-Z])/g, "-$1").toLowerCase(); 
-      attributes += cssAttr + ":" + cssObj[key] + ";";
+    for(let i=0; i<keys.length; i++) {
+      const key = keys[i];
+      const cssAttr = key.replace(/([A-Z])/g, '-$1').toLowerCase(); 
+      attributes += cssAttr + ':' + cssObj[key] + ';';
     }
 
     return attributes;
-  }
+  };
 
   var processArray = function(arr) {
     var distKeys = [];
@@ -64,7 +63,7 @@ var JsonToHtml = (function() {
       // Render the props if only a single object in the array 
       if (arr.length === 1) {
         for (var k in arr[0]) {
-          var value = "";
+          var value = '';
 
           if (arr[0][k]) {
             value = arr[0][k].toString();
@@ -80,20 +79,20 @@ var JsonToHtml = (function() {
       else {
         html = '<tr style="height:25px">';
 
-        for (var k in arr[0]) {
-          distKeys.push(k);
-          html += '<td style="' + getStyleAttributes('subElement') + '">' + getIndent(level) + k + suffix + '</td>';
+        for (var j in arr[0]) {
+          distKeys.push(j);
+          html += '<td style="' + getStyleAttributes('subElement') + '">' + getIndent(level) + j + suffix + '</td>';
         }
 
         html += '</tr>';
         html += getSpacer();
 
         // Render a row for each obj, displaying the value for each distinct key
-        for (var k in arr) {
+        for (var l in arr) {
           html += '<tr style="height:25px">';
 
           for (var i=0; i<distKeys.length; i++) {
-            html += '<td style="' + getStyleAttributes('dataCell') + '">' + getIndent(level) + arr[k][distKeys[i]] + suffix + '</td>';
+            html += '<td style="' + getStyleAttributes('dataCell') + '">' + getIndent(level) + arr[l][distKeys[i]] + suffix + '</td>';
           }
           html += '</tr>';
           html += getSpacer();
@@ -103,17 +102,18 @@ var JsonToHtml = (function() {
 
     // Render a <tr> and <td> for each string in an array
     if (typeof arr[0] === 'string') {
-      for (var k in arr) {
+      for (var m in arr) {
         html += '<tr style="height:25px">';
-        html += '  <td style="' + getStyleAttributes('dataCell') + '" colspan="2">' + getIndent(level) + arr[k] + suffix + '</td>';
+        html += '  <td style="' + getStyleAttributes('dataCell') + '" colspan="2">' + getIndent(level) + arr[m] + suffix + '</td>';
         html += '</tr>';
       }
     }
-
     return html;
   };
 
-  var walkTheDog = function(jsonObj) {
+
+
+  var walkTheDog = function(jsonObj, replacer) {
     var hasArray = false;
 
     if (typeof jsonObj === 'string') {
@@ -142,14 +142,20 @@ var JsonToHtml = (function() {
         }
 
         if (typeof v === 'object') {
-          colspan += level; 
+          // colspan += level;  //unused colspan??
           html += '<tr style="height:25px"><td style="' + rootClass+ '" colspan="3">' + getIndent(level) + k + suffix + '</td></tr>';
           html += getSpacer();
           level += 1;
         }
         else {
-          var style = getStyleAttributes('jsonTd') + getStyleAttributes('dataCell')
-          html += '<tr style="height:25px"><td style="' + rootClass + '">' + getIndent(level) + k + suffix + '</td><td style="' + style + '" colspan="2">' + v + '</td></tr>';
+          var style = getStyleAttributes('jsonTd') + getStyleAttributes('dataCell');
+          
+          var renderVal = v;
+          if (typeof replacer === 'function') {
+            renderVal = replacer(k,v);
+          }
+          
+          html += '<tr style="height:25px"><td style="' + rootClass + '">' + getIndent(level) + k + suffix + '</td><td style="' + style + '" colspan="2">' + renderVal + '</td></tr>';
           html += getSpacer();
         }
        
@@ -159,7 +165,7 @@ var JsonToHtml = (function() {
         }
 
         if (typeof v === 'object' && !(v instanceof Array)) {
-          walkTheDog(v);
+          walkTheDog(v, replacer);
           level = subLevel - 1; // Outdent back 
         }
       }
@@ -168,7 +174,7 @@ var JsonToHtml = (function() {
 
   return {
     getTable: getTable
-  }
+  };
 
 })();
 

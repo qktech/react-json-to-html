@@ -5,6 +5,7 @@ const demoConfig = require('./webpack.config.demo.js');
 const babel = require('gulp-babel');
 const shell = require('gulp-shell');
 const del = require('del');
+const listenPort = 8070;
 
 gulp.task('clean-build', function() {
   return del(['./dist/*.js']);
@@ -15,7 +16,7 @@ gulp.task('clean-demo', function() {
 });
 
 gulp.task('build-component', ['clean-build'], function() {
-  gulp.src(['./src/**/*.js', './src/*js'])
+  gulp.src(['./src/**/*.js', './src/*js','./src/**/*.jsx'])
     .pipe(babel())
     .pipe(gulp.dest('./dist'));
 });
@@ -27,8 +28,8 @@ gulp.task('build', ['clean-build', 'clean-demo'], shell.task([
 
 gulp.task('demo', function() {
   new WebpackDevServer(webpack(demoConfig), {
-    publicPath: "/",
-    contentBase: "demo/",
+    publicPath: '/',
+    contentBase: 'demo/',
     hot: true,
     headers: {
       'Access-Control-Allow-Origin': '*'
@@ -43,10 +44,10 @@ gulp.task('demo', function() {
       chunkModules: false
     },
     historyApiFallback: true
-  }).listen(8080, 'localhost', function(err, result) {
+  }).listen(listenPort, 'localhost', function(err, result) {
     if (err) {
       console.log(err);
     }
-    console.log('Listening at localhost:8080');
+    console.log('Listening at localhost:'+ listenPort);
   });
 });
