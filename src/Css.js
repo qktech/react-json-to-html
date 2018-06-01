@@ -32,11 +32,6 @@ var Css = {
     borderRadius: '5px',
     width: '100%'
   }
-}
-  
+};
+
 export default Css;
-
-
-
-
-
